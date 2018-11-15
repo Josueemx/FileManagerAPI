@@ -1,0 +1,135 @@
+<!doctype html>
+<html>
+	<head>
+		<link rel="stylesheet" type="text/css" href="common/docs.css">
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+		<meta name="viewport" content="initial-scale = 1.0" />
+		<link href="/assets/favicon.ico" rel="shortcut icon" />
+                <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+                <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+                <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+		<title>Online File Manager</title>
+	</head>
+<body>
+	<div class='abstop_header'>
+		<div class='content_area'>
+		&nbsp;
+		</div>
+	</div>
+	<div class="page_header">
+		<div class='page_inner_header'>
+			<a href='http://webix.com'><div class='top_webix_logo'></div></a>
+			Online File Manager
+		</div>
+	</div>
+
+	<div class="page_space">
+	<div class="webixdoc_page webixdoc_start">
+		<div id="webixContent" class='webixdoc_content'>
+			<div class="webixdoc_content_inner">
+                                
+				<div class="webixdoc_breadcrumb nav_breadcrumb" id="breadcrumbs">
+					
+                                    <a  class="webixdoc_back">Users</a>
+                                    <i id="back_button" style="float: right;font-size: 25px;opacity:0.2;" onclick="back()" class="glyphicon glyphicon-circle-arrow-left "></i>
+					
+				</div>
+				<table class='nav_table' id="data_table">
+                        <tr>
+				<td style='width:30px;'>
+					<a style="cursor:pointer;"><div class='nav_folder_img'>&nbsp;</div></a>
+				</td><td> <a style="cursor:pointer;">01 Basic</a> </td>
+			</tr>
+                                </table>
+			</div>
+		</div>
+
+
+	</div>
+	</div>
+
+
+
+</body>
+
+<script type="application/javascript">
+    
+    var Path = "/Users/";
+    var Actual = "Morales";
+    var back_stack = [];
+    
+    $( document ).ready(function() {
+        data(Path, Actual, false);
+    });
+    
+    function back(){
+        alert("kakakak "+back_stack.length);
+        if(back_stack.length>0){
+            var values = back_stack.pop();
+            data(values[0],values[1], true);
+            if(back_stack.length=0){
+                $("#back_button").css( "opacity", "0.2" );
+                $("#back_button").css( "cursor", "initial" );
+            }
+        }
+        
+    }
+    
+    function data(path, actual, from_stack){
+        if(back_stack.length>0){
+            $("#back_button").css( "opacity", "1" );
+            $("#back_button").css( "cursor", "pointer" );
+        }
+        if(!from_stack)
+            back_stack.push([path, actual]);
+        $.ajax({ 
+            type: 'GET', 
+            url: 'http://localhost:8080/FileManagerAPI/getstuff',
+            data:  {Path: path,
+                    Actual: actual
+                    },
+            dataType: 'json',
+            success: function(result){
+                $("#data_table tr").remove();
+                var i;
+                for (i = 0; i < result.Data.length; i++) { 
+                    var onclick;
+                    var icon;
+                    if(result.Data[i][1]=="File"){
+                        icon = "<i style='font-size: 25px;' class='glyphicon glyphicon-file'></i>";
+                        onclick = "'";
+                    }
+                    else{
+                        onclick = "cursor: pointer;' onclick=\"data('"+path+actual+"/','"+result.Data[i][0]+"',false)\"";
+                        icon = "<i style='font-size: 25px; cursor: pointer;' class='glyphicon glyphicon-folder-open'></i>"; 
+                    }
+                    $("#data_table").append( "<tr>"+
+				"<td style='width:30px;'>"+icon+
+				"</td><td> <span style='font-size: 16px;color: #0F8192;"+onclick+">"+result.Data[i][0]+"</span></td>"+
+                                "</tr>" );
+                }
+                Path=path;
+                Actual=actual;
+                var folders = path.split("/");
+                $("#breadcrumbs a").remove();
+                var new_path = "/";
+                for (var j = 0; j < folders.length; j++) {
+                    if(!folders[j]==""){
+                        $("#breadcrumbs").append(""+
+                            "<a  style='cursor:pointer;'class='webixdoc_back' onclick=\"data('"+new_path+"','"+folders[j]+"',false)\">"+folders[j]+"</a>"
+                        );
+                        new_path += folders[j]+"/";
+                    }
+                }
+                $("#breadcrumbs").append(""+
+                            "<a  class='webixdoc_back' styke='cursor:initial!important;'>"+actual+"</a>"
+                        );
+                
+            },
+            error: function(xhr,status,error){
+                alert("error: "+error);
+            }
+        });
+    }
+</script>
+</html>
